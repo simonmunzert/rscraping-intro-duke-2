@@ -11,7 +11,7 @@
 rm(list=ls(all=TRUE))
 
 # install and load packages
-pkgs <- c("RCurl", "XML", "stringr", "httr", "plyr", "ggplot2", "RSelenium")
+pkgs <- c("RCurl", "XML", "stringr", "httr", "plyr", "ggplot2", "RSelenium", "jsonlite")
 # install.packages(pkgs)
 lapply(pkgs, library, character.only=T)
 
@@ -105,13 +105,14 @@ str_extract("blah <body>this is an HTML element</body> blah", "<(.+?)>.+?</\\1>"
   # right-click on element, then "Inspect Element"
 
 # Safari:
-  # Settings --> Advanced --> Shpw Develop menu in menu bar
+  # Settings --> Advanced --> Show Develop menu in menu bar
   # Web inspector tools visible in menu bar - the console is most useful
 
 # Internet Explorer:
   # go to google.com/chrome/ or mozilla.org/en-US/firefox/new/ and download Chrome/Firefox
   # next: see above
 
+browseURL("http://www.washingtonpost.com/blogs/monkey-cage/")
 
 
 ### scraping dynamic information with RSelenium --------------
@@ -120,7 +121,6 @@ str_extract("blah <body>this is an HTML element</body> blah", "<(.+?)>.+?</\\1>"
 # AJAX (Asynchronous JavaScript and XML) is a set of technologies which provide means for asynchronous (not merely action-reaction-style) communication with servers
 # JavaScript/jQuery: scripting language with excellent bindings to web technologies
 # modern browsers can `speak' JavaScript
-browseURL("http://www.washingtonpost.com/blogs/monkey-cage/")
 
 # practical problems for web scrapers
   # the HTML tree changes dynamically
@@ -345,6 +345,44 @@ tweets <- parseTweets("tweets_ebola.json", simplify = TRUE)
 names(tweets)
 cat(tweets$text[1])
 
+
+
+### working with JSON data -------------------------------------
+
+# JavaScript Object Notation is a lightweight data interchange format
+# ultimately compatible with virtually all modern programming languages
+# most popular output from modern web APIs
+
+# JSON and R
+  # rjson --> old
+  # RJSONIO --> newer
+  # jsonlite --> newest, best
+
+library(jsonlite)
+
+# import and parse JSON data
+govtrack_list <- fromJSON("govtrack108.json")
+govtrack_list
+names(govtrack_list)
+
+# extract voting records
+names(govtrack_list$votes)
+govtrackYes <- govtrack_list$votes$Aye
+govtrackNo <- govtrack_list$votes$No
+govtrackNV <- govtrack_list$votes$`Not Voting`
+govtrackYes$vote <- "YES"
+govtrackNo$vote <- "NO"
+govtrackNV$vote <- "NV"
+
+# create data frame
+govtrackDF <- rbind(govtrackYes, govtrackNo, govtrackNV)
+class(govtrackDF)
+sapply(govtrackDF, class)
+with(govtrackDF, table(party, vote))
+
+# expand data frame
+govtrackDF$congress <- govtrack_list$bill$congress
+View(govtrackDF)
 
 
 
